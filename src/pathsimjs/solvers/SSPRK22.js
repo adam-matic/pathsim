@@ -62,21 +62,23 @@ export class SSPRK22 extends Solver {
         // Get current stage
         const stage = this.stage;
 
+        // Buffer the slope at this stage
+        this.k[stage] = [...fArr];
+
+        // Get initial state from history
+        const x0 = this.history[this.history.length - 1];
+
         if (stage === 0) {
-            // First stage: k1 = f(t, x)
-            // Store k1
-            this.k[0] = [...fArr];
-
-            // No state update yet
-        } else if (stage === 1) {
-            // Second stage: k2 = f(t + dt, x + dt*k1)
-            // Store k2
-            this.k[1] = [...fArr];
-
-            // Update state: x_new = x + dt/2 * (k1 + k2)
+            // First stage: Update state using BT[0] = [1.0]
+            // x = x0 + dt * 1.0 * k[0]
             for (let i = 0; i < this.x.length; i++) {
-                this.x[i] = this.history[this.history.length - 1][i] +
-                           (dt / 2.0) * (this.k[0][i] + this.k[1][i]);
+                this.x[i] = x0[i] + dt * this.k[0][i];
+            }
+        } else if (stage === 1) {
+            // Second stage: Update state using BT[1] = [1/2, 1/2]
+            // x = x0 + dt * (1/2 * k[0] + 1/2 * k[1])
+            for (let i = 0; i < this.x.length; i++) {
+                this.x[i] = x0[i] + dt * (0.5 * this.k[0][i] + 0.5 * this.k[1][i]);
             }
         }
 
